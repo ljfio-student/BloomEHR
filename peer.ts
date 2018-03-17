@@ -15,7 +15,7 @@ export class PeerServer {
     public sockets: Array<any>;
     private peers: Array<any>;
 
-    constructor(chain: BlockChain, p2p_port, initial_peers) {
+    constructor(chain: BlockChain, p2p_port: number) {
         this.chain = chain;
 
         this.port = p2p_port;

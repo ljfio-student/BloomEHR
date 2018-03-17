@@ -2,8 +2,8 @@ import { BlockChain } from "./chain";
 import { PeerServer } from "./peer";
 import { WebServer}  from "./web";
 
-var http_port = process.env.HTTP_PORT || 3001;
-var p2p_port = process.env.P2P_PORT || 6001;
+var http_port = Number(process.env.HTTP_PORT) || 3001;
+var p2p_port = Number(process.env.P2P_PORT) || 6001;
 var initial_peers = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 const chain = new BlockChain();
