@@ -18,6 +18,12 @@ export class BlockChain {
 
     constructor() {
         this.db = new PouchDB("data");
+
+        this.db.createIndex({
+            index: {
+                fields: ['index']
+            }
+        });
     }
 
     generateNextBlock = async (blockData) => {
@@ -71,7 +77,6 @@ export class BlockChain {
 
     replaceChain = async (newBlocks) => {
         let result = await this.db.find({ selector: { index: { $exists: true } }, sort: ['index'], limit: 1 });
-
         let blockLength = result.docs.length > 0 ? result.docs[0].index : 0;
 
         if (this.isValidChain(newBlocks) && newBlocks.length > blockLength) {
