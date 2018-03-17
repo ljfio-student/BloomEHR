@@ -9,6 +9,7 @@ export class WebServer {
 
     constructor(chain: BlockChain, peer: PeerServer, http_port: number) {
         this.port = http_port;
+        chain.web = this;
 
         this.app = express();
 

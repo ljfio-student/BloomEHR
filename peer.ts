@@ -17,6 +17,7 @@ export class PeerServer {
 
     constructor(chain: BlockChain, p2p_port: number) {
         this.chain = chain;
+        chain.peer = this;
 
         this.port = p2p_port;
         this.server = new WebSocket.Server({ port: p2p_port });
@@ -81,10 +82,10 @@ export class PeerServer {
         ws.on('error', () => closeConnection(ws));
     };
 
-    handleBlockchainResponse = (message) => {
+    handleBlockchainResponse = async (message) => {
         var receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
         var latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-        var latestBlockHeld = this.chain.getLatestBlock();
+        var latestBlockHeld = await this.chain.getLatestBlock();
 
         if (latestBlockReceived.index > latestBlockHeld.index) {
             console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
