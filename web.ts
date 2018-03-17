@@ -16,8 +16,8 @@ export class WebServer {
 
         this.app.get('/blocks', (req, res) => res.send(JSON.stringify(chain.getBlocks())));
 
-        this.app.post('/mineBlock', (req, res) => {
-            var newBlock = chain.generateNextBlock(req.body.data);
+        this.app.post('/mineBlock', async (req, res) => {
+            var newBlock = await chain.generateNextBlock(req.body.data);
             chain.addBlock(newBlock);
             peer.broadcast(peer.responseLatestMsg());
             console.log('block added: ' + JSON.stringify(newBlock));

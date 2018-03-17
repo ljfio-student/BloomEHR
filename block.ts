@@ -1,9 +1,9 @@
 export class Block {
-    private index: number;
-    private previousHash: string;
-    private timestamp: number;
-    private data: any;
-    private hash: string;
+    public index: number;
+    public previousHash: string;
+    public timestamp: number;
+    public data: any;
+    public hash: string;
 
     constructor(index, previousHash, timestamp, data, hash) {
         this.index = index;

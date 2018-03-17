@@ -1,6 +1,7 @@
 import { Block } from "./block";
 import CryptoJS from "crypto-js";
 import PouchDB from "pouchdb";
+import PouchFind from 'pouchdb-find';
 import { PeerServer } from "./peer";
 import { WebServer } from "./web";
 
@@ -9,19 +10,18 @@ var getGenesisBlock = () => {
 };
 
 export class BlockChain {
-    private db: PouchDB.Database;
+    private db: PouchDB.Database<Block>;
     public peer: PeerServer;
     public web: WebServer;
 
     constructor() {
-        this.db = new PouchDB("data");
+        PouchDB.plugin(PouchFind);
 
-        // Set some defaults (required if your JSON file is empty)
-        this.db.defaults({ chain: [getGenesisBlock()], user: {}, count: 0 }).write();
+        this.db = new PouchDB("data");
     }
 
-    generateNextBlock = (blockData) => {
-        var previousBlock = this.getLatestBlock();
+    generateNextBlock = async (blockData) => {
+        var previousBlock = await this.getLatestBlock();
         var nextIndex = previousBlock.index + 1;
         var nextTimestamp = new Date().getTime() / 1000;
         var nextHash = this.calculateHash(nextIndex, previousBlock.hash, nextTimestamp, blockData);
@@ -36,13 +36,21 @@ export class BlockChain {
         return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
     };
 
-    getLatestBlock = () => this.db.get('chain').sortBy('id').first();
+    async getLatestBlock() {
+        var result = await this.db.find({
+            selector: {
+                index: { $exists: true }
+            },
+            sort: ['index'],
+            limit: 1
+        });
 
-    addBlock = (newBlock) => {
+        return result.docs.length > 0 ? result.docs[0] : null;
+    }
+
+    addBlock = async (newBlock: Block) => {
         if (this.isValidNewBlock(newBlock, this.getLatestBlock())) {
-            this.db.get('chain')
-                .push(newBlock)
-                .write();
+            await this.db.put(newBlock);
         }
     };
 
@@ -61,18 +69,22 @@ export class BlockChain {
         return true;
     };
 
-    replaceChain = (newBlocks) => {
-        if (this.isValidChain(newBlocks) && newBlocks.length > this.db. .length) {
+    replaceChain = async (newBlocks) => {
+        let result = await this.db.find({ selector: { index: { $exists: true } }, sort: ['index'], limit: 1 });
+
+        let blockLength = result.docs.length > 0 ? result.docs[0].index : 0;
+
+        if (this.isValidChain(newBlocks) && newBlocks.length > blockLength) {
             console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
-            this.db. = newBlocks;
+
             this.peer.broadcast(this.peer.responseLatestMsg());
         } else {
             console.log('Received blockchain invalid');
         }
     };
 
-    getBlocks() {
-        return this.db
+    async getBlocks() {
+        return await this.db.allDocs();
     }
 
     isValidChain = (blockchainToValidate) => {
