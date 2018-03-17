@@ -14,14 +14,14 @@
         "ws": "^5.0.0"
     },
     "devDependencies": {
-        "gulp": "^3.9.1",
-        "gulp-typescript": "^4.0.1",
         "@types/crypto-js": "^3.1.38",
         "@types/lowdb": "^1.0.0",
         "@types/node": "^9.4.7",
-        "@types/ws": "^4.0.1",
         "@types/pouchdb": "^6.3.2",
         "@types/pouchdb-find": "^6.3.2",
+        "@types/ws": "^4.0.1",
+        "gulp": "^3.9.1",
+        "gulp-typescript": "^4.0.1",
         "typescript": "^2.7.2"
     }
 }
