@@ -1,9 +1,11 @@
 import { Block } from "./block";
 import CryptoJS from "crypto-js";
-import PouchDB from "pouchdb";
-import PouchFind from 'pouchdb-find';
+import * as PouchDB from "pouchdb";
+import * as PouchFind from 'pouchdb-find';
 import { PeerServer } from "./peer";
 import { WebServer } from "./web";
+
+PouchDB.plugin(PouchFind);
 
 var getGenesisBlock = () => {
     return new Block(0, "0", 1521318738, "genesis", "d6f72da4a5a7ced639202617a7d297feae648447ad2db061ac6bf5c6cdf4f1bc");
@@ -15,8 +17,6 @@ export class BlockChain {
     public web: WebServer;
 
     constructor() {
-        PouchDB.plugin(PouchFind);
-
         this.db = new PouchDB("data");
     }
 
