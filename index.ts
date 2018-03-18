@@ -6,10 +6,15 @@ var http_port = Number(process.env.HTTP_PORT) || 3001;
 var p2p_port = Number(process.env.P2P_PORT) || 6001;
 var initial_peers = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
+// Initialise our blockchain
 const chain = new BlockChain();
-const peer = new PeerServer(chain, p2p_port);
-const web = new WebServer(chain, peer, http_port);
+chain.init().then(() => {
+    // Setup peer-to-peer service
+    const peer = new PeerServer(chain, p2p_port);
+    peer.connectToPeers(initial_peers);
+    peer.init();
 
-peer.connectToPeers(initial_peers);
-web.listen();
-peer.init();
+    // Web service
+    const web = new WebServer(chain, peer, http_port);
+    web.listen();
+});

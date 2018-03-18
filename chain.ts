@@ -12,57 +12,74 @@ var getGenesisBlock = () => {
 };
 
 export class BlockChain {
-    private db: PouchDB.Database<Block>;
+    public db: PouchDB.Database<Block>;
     public peer: PeerServer;
     public web: WebServer;
 
     constructor() {
         this.db = new PouchDB("data");
-
-        this.db.createIndex({
-            index: {
-                fields: ['index']
-            }
-        });
     }
 
-    generateNextBlock = async (blockData) => {
+    async init() {
+        try {
+            var result = await this.db.createIndex({
+                index: {
+                    name: "block-identity",
+                    fields: ['identity']
+                }
+            });
+
+            if (result.result == "created") {
+                await this.db.post(getGenesisBlock())
+            }
+        } catch(err) {
+            console.error(err);
+        }
+    }
+
+    async generateNextBlock(blockData: Block): Promise<Block> {
         var previousBlock = await this.getLatestBlock();
-        var nextIndex = previousBlock.index + 1;
+        var nextIndex = previousBlock.identity + 1;
         var nextTimestamp = new Date().getTime() / 1000;
         var nextHash = this.calculateHash(nextIndex, previousBlock.hash, nextTimestamp, blockData);
         return new Block(nextIndex, previousBlock.hash, nextTimestamp, blockData, nextHash);
     };
 
-    calculateHashForBlock = (block) => {
-        return this.calculateHash(block.index, block.previousHash, block.timestamp, block.data);
+    calculateHashForBlock = (block: Block) => {
+        return this.calculateHash(block.identity, block.previousHash, block.timestamp, block.data);
     };
 
     calculateHash = (index, previousHash, timestamp, data) => {
         return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
     };
 
-    async getLatestBlock() {
-        var result = await this.db.find({
-            selector: {
-                index: { $exists: true }
-            },
-            sort: ['index'],
-            limit: 1
-        });
+    async getLatestBlock(): Promise<Block> {
+        try {
+            var result = await this.db.find({
+                selector: {
+                    identity: { $gte: 0 }
+                },
+                sort: [{identity: 'desc'}],
+                limit: 1
+            });
 
-        return result.docs.length > 0 ? result.docs[0] : null;
+            return result.docs[0] as Block;
+        } catch(err) {
+            console.error(err);
+        }
+
+        return null;
     }
 
     addBlock = async (newBlock: Block) => {
-        if (this.isValidNewBlock(newBlock, this.getLatestBlock())) {
+        if (this.isValidNewBlock(newBlock, await this.getLatestBlock())) {
             await this.db.put(newBlock);
         }
     };
 
-    isValidNewBlock = (newBlock, previousBlock) => {
-        if (previousBlock.index + 1 !== newBlock.index) {
-            console.log('invalid index');
+    isValidNewBlock = (newBlock: Block, previousBlock: Block) => {
+        if (previousBlock.identity + 1 !== newBlock.identity) {
+            console.log('invalid identity');
             return false;
         } else if (previousBlock.hash !== newBlock.previousHash) {
             console.log('invalid previous hash');
@@ -75,24 +92,38 @@ export class BlockChain {
         return true;
     };
 
-    replaceChain = async (newBlocks) => {
-        let result = await this.db.find({ selector: { index: { $exists: true } }, sort: ['index'], limit: 1 });
-        let blockLength = result.docs.length > 0 ? result.docs[0].index : 0;
+    replaceChain = async (newBlocks: Array<Block>) => {
+        let result = await this.db.find({
+            selector: { identity: { $exists: true } },
+            sort: [{identity: 'desc'}],
+            limit: 1 });
+
+        let blockLength = result.docs[0].identity;
 
         if (this.isValidChain(newBlocks) && newBlocks.length > blockLength) {
             console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
 
-            this.peer.broadcast(this.peer.responseLatestMsg());
+            this.peer.broadcast(await this.peer.responseLatestMsg());
         } else {
             console.log('Received blockchain invalid');
         }
     };
 
-    async getBlocks() {
-        return await this.db.allDocs();
+    async getBlocks(): Promise<Array<Block>> {
+        try {
+            var result = await this.db.allDocs({
+                include_docs: true,
+            });
+
+            return result.rows.map((val) => val.doc) as Array<Block>;
+        } catch (err) {
+            console.error(err);
+        }
+
+        return null;
     }
 
-    isValidChain = (blockchainToValidate) => {
+    isValidChain = (blockchainToValidate: Array<Block>) => {
         if (JSON.stringify(blockchainToValidate[0]) !== JSON.stringify(getGenesisBlock())) {
             return false;
         }

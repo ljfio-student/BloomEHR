@@ -50,20 +50,20 @@ export class PeerServer {
     }
 
     initMessageHandler = (ws) => {
-        ws.on('message', (data) => {
+        ws.on('message', async (data) => {
             var message = JSON.parse(data);
 
             console.log('Received message' + JSON.stringify(message));
 
             switch (message.type) {
                 case MessageType.QUERY_LATEST:
-                    this.write(ws, this.responseLatestMsg());
+                    this.write(ws, await this.responseLatestMsg());
                     break;
                 case MessageType.QUERY_ALL:
-                    this.write(ws, this.responseChainMsg());
+                    this.write(ws, await this.responseChainMsg());
                     break;
                 case MessageType.RESPONSE_BLOCKCHAIN:
-                    this.handleBlockchainResponse(message);
+                    await this.handleBlockchainResponse(message);
                     break;
             }
         });
@@ -87,36 +87,34 @@ export class PeerServer {
         var latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
         var latestBlockHeld = await this.chain.getLatestBlock();
 
-        if (latestBlockReceived.index > latestBlockHeld.index) {
-            console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
+        if (latestBlockReceived.identity > latestBlockHeld.identity) {
+            console.log('blockchain possibly behind. We got: ' + latestBlockHeld.identity + ' Peer got: ' + latestBlockReceived.index);
             if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
                 console.log("We can append the received block to our chain");
-                this.chain.addBlock(latestBlockReceived); // TODO: FIX
-                this.broadcast(this.responseLatestMsg());
+                await this.chain.addBlock(latestBlockReceived); // TODO: FIX
+                this.broadcast(await this.responseLatestMsg());
             } else if (receivedBlocks.length === 1) {
                 console.log("We have to query the chain from our peer");
                 this.broadcast(this.queryAllMsg());
             } else {
                 console.log("Received blockchain is longer than current blockchain");
-                this.chain.replaceChain(receivedBlocks);
+                await this.chain.replaceChain(receivedBlocks);
             }
         } else {
             console.log('received blockchain is not longer than current blockchain. Do nothing');
         }
     };
 
-
-
     queryChainLengthMsg = () => ({ 'type': MessageType.QUERY_LATEST });
 
     queryAllMsg = () => ({ 'type': MessageType.QUERY_ALL });
 
-    responseChainMsg = () => ({
-        'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(this.chain.getBlocks())
+    responseChainMsg = async () => ({
+        'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(await this.chain.getBlocks())
     });
 
-    responseLatestMsg = () => ({
+    responseLatestMsg = async () => ({
         'type': MessageType.RESPONSE_BLOCKCHAIN,
-        'data': JSON.stringify([this.chain.getLatestBlock()])
+        'data': JSON.stringify([await this.chain.getLatestBlock()])
     });
 }

@@ -1,12 +1,12 @@
 export class Block {
-    public index: number;
+    public identity: number;
     public previousHash: string;
     public timestamp: number;
     public data: any;
     public hash: string;
 
-    constructor(index, previousHash, timestamp, data, hash) {
-        this.index = index;
+    constructor(identity, previousHash, timestamp, data, hash) {
+        this.identity = identity;
         this.previousHash = previousHash.toString();
         this.timestamp = timestamp;
         this.data = data;

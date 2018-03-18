@@ -15,12 +15,12 @@ export class WebServer {
 
         this.app.use(bodyParser.json());
 
-        this.app.get('/blocks', (req, res) => res.send(JSON.stringify(chain.getBlocks())));
+        this.app.get('/blocks', async (req, res) => res.send(JSON.stringify(await chain.getBlocks())));
 
         this.app.post('/mineBlock', async (req, res) => {
             var newBlock = await chain.generateNextBlock(req.body.data);
             chain.addBlock(newBlock);
-            peer.broadcast(peer.responseLatestMsg());
+            peer.broadcast(await peer.responseLatestMsg());
             console.log('block added: ' + JSON.stringify(newBlock));
             res.send();
         });
