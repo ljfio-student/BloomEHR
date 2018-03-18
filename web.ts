@@ -18,7 +18,7 @@ export class WebServer {
 
         this.app.use(express.static('public'))
 
-        this.app.get('/', (req, res) => res.sendFile(path.resolve("index.html")));
+        this.app.get('/', (req, res) => res.sendFile(path.resolve("public/index.html")));
 
         this.app.get('/blocks', async (req, res) => res.send(JSON.stringify(await chain.getBlocks())));
 
