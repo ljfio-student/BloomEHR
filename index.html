@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-<head>
 
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,35 +10,39 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet">
-
 </head>
+
 <body>
-
-<div class="container">
-
-    <h1>Bloom - HEX 2018</h1>
-
-        <div class="row" id="vendors">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-1">
+                <img src="/logo.png" style="height:40px; margin-top: 15px;" />
+            </div>
+            <div class="col-xs-11">
+                <h1>Bloom - HEX 2018</h1>
+            </div>
         </div>
+        <div class="row" id="vendors"></div>
+    </div>
 
-</div>
-
-<script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+    <script>
         var vendors = ["Zurich", "Virgin", "Bupa", "NHS"];
-        var requests = ["Test", "Test2"];
+        var requests = ["ECG - 15th March 2018", "Prescription - 18th March 2018"];
         var text = "";
         var i;
         var j;
         for (i = 0; i < vendors.length; i++) {
-            text += "<div class=\"col-xs-12\" style=\"border: 2px solid; border-color: green; margin: 15px 0px;\"><h3>" + 
-            vendors[i] + "</h3><hr>";
-            for (j = 0; j < requests.length; j++){
+            text += "<div class=\"col-xs-12\" style=\"border: 2px solid; border-color: green; margin: 15px 0px;\"><h3>" +
+                vendors[i] + "</h3><hr>";
+            for (j = 0; j < requests.length; j++) {
                 text += "<p>" + requests[j] + "<button type=\"button\" class=\"btn btn-danger pull-right\" style=\"margin-left:15px;\">Reject</button><button type=\"button\" class=\"btn btn-success pull-right\">Accept</button></p><br>";
             }
             text += "</div><div class=\"col-xs-12\"><button type=\"button\" class=\"btn btn-danger pull-right\" style=\"margin-left:15px;\">Reject</button><button type=\"button\" class=\"btn btn-success pull-right\">Accept</button></p><br></div>";
         }
         document.getElementById("vendors").innerHTML = text;
-        </script>
-
+    </script>
 </body>
+
 </html>
