@@ -19,7 +19,7 @@ export class WebServer {
 
         this.app.post('/mineBlock', async (req, res) => {
             var newBlock = await chain.generateNextBlock(req.body.data);
-            chain.addBlock(newBlock);
+            await chain.addBlock(newBlock);
             peer.broadcast(await peer.responseLatestMsg());
             console.log('block added: ' + JSON.stringify(newBlock));
             res.send();

@@ -1,5 +1,5 @@
 import { Block } from "./block";
-import CryptoJS from "crypto-js";
+import * as CryptoJS from "crypto-js";
 import * as PouchDB from "pouchdb";
 import * as PouchFind from 'pouchdb-find';
 import { PeerServer } from "./peer";
@@ -32,7 +32,7 @@ export class BlockChain {
             if (result.result == "created") {
                 await this.db.post(getGenesisBlock())
             }
-        } catch(err) {
+        } catch (err) {
             console.error(err);
         }
     }
@@ -59,12 +59,12 @@ export class BlockChain {
                 selector: {
                     identity: { $gte: 0 }
                 },
-                sort: [{identity: 'desc'}],
+                sort: [{ identity: 'desc' }],
                 limit: 1
             });
 
             return result.docs[0] as Block;
-        } catch(err) {
+        } catch (err) {
             console.error(err);
         }
 
@@ -73,7 +73,7 @@ export class BlockChain {
 
     addBlock = async (newBlock: Block) => {
         if (this.isValidNewBlock(newBlock, await this.getLatestBlock())) {
-            await this.db.put(newBlock);
+            await this.db.post(newBlock);
         }
     };
 
@@ -93,19 +93,24 @@ export class BlockChain {
     };
 
     replaceChain = async (newBlocks: Array<Block>) => {
-        let result = await this.db.find({
-            selector: { identity: { $exists: true } },
-            sort: [{identity: 'desc'}],
-            limit: 1 });
+        try {
+            var result = await this.db.info();
 
-        let blockLength = result.docs[0].identity;
+            if (this.isValidChain(newBlocks) && newBlocks.length > result.doc_count) {
+                console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
 
-        if (this.isValidChain(newBlocks) && newBlocks.length > blockLength) {
-            console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
+                this.db.allDocs({}).then((data) => {
+                    data.rows.forEach(async (item) => {
+                        await this.db.remove(item.key, item.value.rev);
+                    });
+                });
 
-            this.peer.broadcast(await this.peer.responseLatestMsg());
-        } else {
-            console.log('Received blockchain invalid');
+                this.peer.broadcast(await this.peer.responseLatestMsg());
+            } else {
+                console.log('Received blockchain invalid');
+            }
+        } catch (err) {
+            console.log(err);
         }
     };
 
@@ -113,6 +118,7 @@ export class BlockChain {
         try {
             var result = await this.db.allDocs({
                 include_docs: true,
+                inclusive_end: true
             });
 
             return result.rows.map((val) => val.doc) as Array<Block>;
