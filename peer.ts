@@ -88,7 +88,8 @@ export class PeerServer {
         var latestBlockHeld = await this.chain.getLatestBlock();
 
         if (latestBlockReceived.identity > latestBlockHeld.identity) {
-            console.log('blockchain possibly behind. We got: ' + latestBlockHeld.identity + ' Peer got: ' + latestBlockReceived.index);
+            console.log('blockchain possibly behind. We got: ' + latestBlockHeld.identity + ' Peer got: ' + latestBlockReceived.identity);
+
             if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
                 console.log("We can append the received block to our chain");
                 await this.chain.addBlock(latestBlockReceived); // TODO: FIX
