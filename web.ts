@@ -2,6 +2,7 @@ import { BlockChain } from "./chain";
 import * as express from "express";
 import * as bodyParser from 'body-parser';
 import { PeerServer } from "./peer";
+import * as path from "path";
 
 export class WebServer {
     private port: number;
@@ -14,6 +15,10 @@ export class WebServer {
         this.app = express();
 
         this.app.use(bodyParser.json());
+
+        this.app.use(express.static('public'))
+
+        this.app.get('/', (req, res) => res.sendFile(path.resolve("index.html")));
 
         this.app.get('/blocks', async (req, res) => res.send(JSON.stringify(await chain.getBlocks())));
 
